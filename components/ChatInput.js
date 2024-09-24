@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, StyleSheet } from 'react-native';
+import { View, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 export default function ChatInput({ onSendMessage }) {
   const [text, setText] = useState('');
@@ -19,7 +20,9 @@ export default function ChatInput({ onSendMessage }) {
         value={text}
         onChangeText={setText}
       />
-      <Button title="Send" onPress={handleSend} />
+      <TouchableOpacity onPress={handleSend} style={styles.sendButton}>
+        <Icon name="send" size={24} color="#fff" />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -27,15 +30,23 @@ export default function ChatInput({ onSendMessage }) {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#ccc',
+    padding: 10,
+    backgroundColor: '#fff',
   },
   input: {
     flex: 1,
     borderColor: 'gray',
     borderWidth: 1,
-    paddingHorizontal: 8,
-    marginRight: 8,
+    paddingHorizontal: 10,
+    borderRadius: 20,
+    backgroundColor: '#f2f2f2',
+  },
+  sendButton: {
+    marginLeft: 10,
+    backgroundColor: '#25D366',
+    borderRadius: 20,
+    padding: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

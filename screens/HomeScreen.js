@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const conversations = [
   {
@@ -33,7 +34,7 @@ export default function HomeScreen({ navigation }) {
                 <Text style={styles.name}>{item.name}</Text>
                 <Text style={styles.lastMessage}>{item.lastMessage}</Text>
               </View>
-              <Text style={styles.readReceipt}>{item.readReceipt}</Text>
+              <Icon name="check-all" size={20} color={item.readReceipt === '✔✔' ? "#34B7F1" : "#777"} />
             </View>
           </TouchableOpacity>
         )}
@@ -45,7 +46,7 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+    backgroundColor: '#fff',
   },
   item: {
     flexDirection: 'row',
@@ -70,8 +71,5 @@ const styles = StyleSheet.create({
   lastMessage: {
     color: 'gray',
     marginTop: 4,
-  },
-  readReceipt: {
-    color: 'gray',
   },
 });
