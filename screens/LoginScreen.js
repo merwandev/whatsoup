@@ -18,7 +18,7 @@ export default function LoginScreen({ navigation }) {
         onChangeText={setEmailOrPhone}
         keyboardType="email-address"
       />
-      <Button title="Login" onPress={handleLogin} />
+      <Button title="Login" onPress={handleLogin} color="#25D366" />
     </View>
   );
 }
@@ -28,16 +28,19 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 16,
+    backgroundColor: '#fff',
   },
   label: {
     marginBottom: 10,
     fontSize: 18,
+    color: '#075E54',
   },
   input: {
     height: 40,
-    borderColor: 'gray',
+    borderColor: '#075E54',
     borderWidth: 1,
     marginBottom: 16,
     paddingHorizontal: 8,
+    borderRadius: 5,
   },
 });
