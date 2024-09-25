@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, AsyncStorage, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import jwtDecode from 'jwt-decode'; // Installe cette bibliothèque pour décoder le JWT
+import jwtDecode from 'jwt-decode';
 
 const conversations = [
   {
@@ -9,14 +9,14 @@ const conversations = [
     name: 'John Doe',
     lastMessage: 'Hello, how are you?',
     readReceipt: '✔✔',
-    avatar: 'https://randomuser.me/api/portraits/men/1.jpg'
+    avatar: 'https://i.pinimg.com/originals/54/72/d1/5472d1b09d3d724228109d381d617326.jpg'
   },
   {
     id: '2',
     name: 'Jane Smith',
     lastMessage: 'See you tomorrow!',
     readReceipt: '✔',
-    avatar: 'https://randomuser.me/api/portraits/women/2.jpg'
+    avatar: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQCWiOv0mfiRYIscnuMgDWbBejgwipcTsGG_Zz4nrdT6z_yKHsVa_6L8s_ajhnKR0TfTQs&usqp=CAU'
   },
 ];
 
@@ -26,7 +26,7 @@ export default function HomeScreen({ navigation }) {
       const token = await AsyncStorage.getItem('jwtToken');
       if (!token) {
         Alert.alert('Session expirée', 'Veuillez vous reconnecter.');
-        navigation.navigate('LoginScreen');
+        navigation.navigate('Login');
         return;
       }
 
@@ -36,7 +36,7 @@ export default function HomeScreen({ navigation }) {
 
         if (decodedToken.exp < currentTime) {
           Alert.alert('Session expirée', 'Veuillez vous reconnecter.');
-          navigation.navigate('LoginScreen');
+          navigation.navigate('Login');
         }
       } catch (error) {
         console.error('Error decoding token:', error);
@@ -72,7 +72,7 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#ECE5DD',
   },
   item: {
     flexDirection: 'row',
@@ -80,6 +80,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
+    backgroundColor: '#fff',
   },
   avatar: {
     width: 50,
