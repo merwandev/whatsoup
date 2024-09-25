@@ -7,6 +7,7 @@ import HomeScreen from './screens/HomeScreen';
 import ChatScreen from './screens/ChatScreen';
 import NewChatScreen from './screens/NewChatScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import VerificationScreen from './screens/VerificationScreen';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const Stack = createStackNavigator();
@@ -44,7 +45,8 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Login">
-        {/* <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'Login' }} /> */}
+        <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'Login', headerLeft: null  }} />
+        <Stack.Screen name="Verification" component={VerificationScreen} />
         <Stack.Screen 
           name="Home" 
           component={HomeTabs} 
