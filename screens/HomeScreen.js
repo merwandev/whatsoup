@@ -1,102 +1,84 @@
-import React, { useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, AsyncStorage, Alert } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import jwtDecode from 'jwt-decode';
+import React, { useEffect, useState } from 'react';
+import { View, Text, FlatList, StyleSheet } from 'react-native';
+import axios from 'axios';
+import { useRoute } from '@react-navigation/native'; // Utilisation du hook useRoute
 
-const conversations = [
-  {
-    id: '1',
-    name: 'John Doe',
-    lastMessage: 'Hello, how are you?',
-    readReceipt: '✔✔',
-    avatar: 'https://i.pinimg.com/originals/54/72/d1/5472d1b09d3d724228109d381d617326.jpg'
-  },
-  {
-    id: '2',
-    name: 'Jane Smith',
-    lastMessage: 'See you tomorrow!',
-    readReceipt: '✔',
-    avatar: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQCWiOv0mfiRYIscnuMgDWbBejgwipcTsGG_Zz4nrdT6z_yKHsVa_6L8s_ajhnKR0TfTQs&usqp=CAU'
-  },
-];
+const BACKEND_IP = '10.74.1.114';
+const BACKEND_PORT = '3001';
 
-export default function HomeScreen({ navigation }) {
-  useEffect(() => {
-    const checkToken = async () => {
-      const token = await AsyncStorage.getItem('jwtToken');
-      if (!token) {
-        Alert.alert('Session expirée', 'Veuillez vous reconnecter.');
-        navigation.navigate('Login');
-        return;
-      }
+const api = axios.create({
+    baseURL: `http://${BACKEND_IP}:${BACKEND_PORT}`,
+});
 
-      try {
-        const decodedToken = jwtDecode(token);
-        const currentTime = Date.now() / 1000;
+export default function HomeScreen({route, navigate}) {
+    // const route = useRoute(); // Utilise useRoute pour accéder aux paramètres
+    console.log('Route:', route);
+    console.log('Params:', route.params);
+    const { phoneNumber } = route.params; // Récupérer le phoneNumber passé depuis VerificationScreen
+    const [conversations, setConversations] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-        if (decodedToken.exp < currentTime) {
-          Alert.alert('Session expirée', 'Veuillez vous reconnecter.');
-          navigation.navigate('Login');
+    useEffect(() => {
+        const fetchConversations = async () => {
+            try {
+                const response = await api.get(`/conversations/${phoneNumber}`);
+                setConversations(response.data);
+                setLoading(false);
+                console.log('PhoneNumber:', phoneNumber);
+                console.log('Conversations:', response.data);
+            } catch (error) {
+                console.error('Erreur lors de la récupération des conversations:', error);
+            }
+        };
+
+        if (phoneNumber) {
+            fetchConversations();
+        } else {
+            console.error('Numéro de téléphone non défini');
         }
-      } catch (error) {
-        console.error('Error decoding token:', error);
-        Alert.alert('Erreur', 'Une erreur s\'est produite lors de la vérification du token.');
-      }
-    };
+    }, [phoneNumber]);
 
-    checkToken();
-  }, [navigation]);
-
-  return (
-    <View style={styles.container}>
-      <FlatList
-        data={conversations}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => navigation.navigate('Chat', { userId: item.id })}>
-            <View style={styles.item}>
-              <Image source={{ uri: item.avatar }} style={styles.avatar} />
-              <View style={styles.messageInfo}>
-                <Text style={styles.name}>{item.name}</Text>
-                <Text style={styles.lastMessage}>{item.lastMessage}</Text>
-              </View>
-              <Icon name="check-all" size={20} color={item.readReceipt === '✔✔' ? "#34B7F1" : "#777"} />
+    if (loading) {
+        return (
+            <View style={styles.container}>
+                <Text>Chargement des conversations...</Text>
             </View>
-          </TouchableOpacity>
-        )}
-      />
-    </View>
-  );
+        );
+    }
+
+    return (
+        <View style={styles.container}>
+            <FlatList
+                data={conversations}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => (
+                    <View style={styles.item}>
+                        <Text style={styles.name}>{item.name}</Text>
+                        <Text style={styles.lastMessage}>{item.lastMessage}</Text>
+                    </View>
+                )}
+            />
+        </View>
+    );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#ECE5DD',
-  },
-  item: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    backgroundColor: '#fff',
-  },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 16,
-  },
-  messageInfo: {
-    flex: 1,
-  },
-  name: {
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  lastMessage: {
-    color: 'gray',
-    marginTop: 4,
-  },
+    container: {
+        flex: 1,
+        padding: 16,
+        backgroundColor: '#fff',
+    },
+    item: {
+        padding: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#ccc',
+    },
+    name: {
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
+    lastMessage: {
+        color: 'gray',
+        marginTop: 4,
+    },
 });
