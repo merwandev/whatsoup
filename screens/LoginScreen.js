@@ -1,24 +1,60 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, StyleSheet, Text } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, Text, Alert } from 'react-native';
+import axios from 'axios';
+
+const BACKEND_IP = '10.74.1.114';
+const BACKEND_PORT = '3001';
+
+const api = axios.create({
+  baseURL: `http://${BACKEND_IP}:${BACKEND_PORT}`,
+});
 
 export default function LoginScreen({ navigation }) {
-  const [emailOrPhone, setEmailOrPhone] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
 
-  const handleLogin = () => {
-    navigation.navigate('Home');
+  const sendVerificationCode = async () => {
+    if (phoneNumber.length !== 9) {
+      Alert.alert('Erreur', 'Veuillez entrer un numéro de téléphone valide (ex 699421627).');
+      return;
+    }
+    const fullPhoneNumber = `+33${phoneNumber}`;
+
+    try {
+      const response = await api.post('/send-verification-code', { phoneNumber: fullPhoneNumber });
+
+      if (response.status === 200 && response.data.success) {
+        Alert.alert('Code envoyé', 'Un code de vérification a été envoyé à votre numéro.');
+        navigation.navigate('Verification', { phoneNumber: fullPhoneNumber });
+      } else {
+        Alert.alert('Erreur', response.data.message);
+      }
+    } catch (error) {
+      console.error('Error details:', error);
+      Alert.alert('Erreur', `Impossible d'envoyer le code de vérification. Détails: ${error.message}`);
+    }
+  };
+
+  const handleSignUp = () => {
+    navigation.navigate('SignUp');
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Login with Email or Phone</Text>
+      <Text style={styles.title}>WhatsSoup 🍜</Text>
       <TextInput
         style={styles.input}
-        placeholder="Enter email or phone number"
-        value={emailOrPhone}
-        onChangeText={setEmailOrPhone}
-        keyboardType="email-address"
+        placeholder="Entrez votre numéro de téléphone"
+        keyboardType="phone-pad"
+        value={phoneNumber}
+        onChangeText={setPhoneNumber}
       />
-      <Button title="Login" onPress={handleLogin} color="#25D366" />
+      <TouchableOpacity style={styles.button} onPress={sendVerificationCode}>
+        <Text style={styles.buttonText}>Login</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={handleSignUp} style={styles.signUpContainer}>
+        <Text style={styles.signUpText}>ou inscrivez-vous</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -30,17 +66,38 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#fff',
   },
-  label: {
-    marginBottom: 10,
-    fontSize: 18,
+  title: {
+    fontSize: 24,
     color: '#075E54',
+    textAlign: 'center',
+    marginBottom: 20,
+    fontWeight: 'bold',
   },
   input: {
-    height: 40,
+    height: 50,
     borderColor: '#075E54',
     borderWidth: 1,
-    marginBottom: 16,
-    paddingHorizontal: 8,
+    marginBottom: 20,
+    paddingHorizontal: 10,
     borderRadius: 5,
+  },
+  button: {
+    backgroundColor: '#25D366',
+    paddingVertical: 15,
+    borderRadius: 5,
+  },
+  buttonText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  signUpContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  signUpText: {
+    color: '#075E54',
+    fontSize: 16,
   },
 });

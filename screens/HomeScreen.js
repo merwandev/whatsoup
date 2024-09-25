@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import jwtDecode from 'jwt-decode'; // Installe cette bibliothèque pour décoder le JWT
 
 const conversations = [
   {
@@ -17,10 +18,35 @@ const conversations = [
     readReceipt: '✔',
     avatar: 'https://randomuser.me/api/portraits/women/2.jpg'
   },
-  // Ajoute plus de conversations ici
 ];
 
 export default function HomeScreen({ navigation }) {
+  useEffect(() => {
+    const checkToken = async () => {
+      const token = await AsyncStorage.getItem('jwtToken');
+      if (!token) {
+        Alert.alert('Session expirée', 'Veuillez vous reconnecter.');
+        navigation.navigate('LoginScreen');
+        return;
+      }
+
+      try {
+        const decodedToken = jwtDecode(token);
+        const currentTime = Date.now() / 1000;
+
+        if (decodedToken.exp < currentTime) {
+          Alert.alert('Session expirée', 'Veuillez vous reconnecter.');
+          navigation.navigate('LoginScreen');
+        }
+      } catch (error) {
+        console.error('Error decoding token:', error);
+        Alert.alert('Erreur', 'Une erreur s\'est produite lors de la vérification du token.');
+      }
+    };
+
+    checkToken();
+  }, [navigation]);
+
   return (
     <View style={styles.container}>
       <FlatList
