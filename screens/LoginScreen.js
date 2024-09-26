@@ -20,7 +20,7 @@ export default function LoginScreen({ navigation }) {
     const fullPhoneNumber = `+33${phoneNumber}`;
 
     try {
-      if (phoneNumber === "695720471") {
+      if (phoneNumber === "+33695720471") {
         navigation.navigate('Verification', { phoneNumber: fullPhoneNumber });
       }
 
