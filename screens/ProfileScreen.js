@@ -24,13 +24,13 @@ export default function ProfileScreen({ route }) {
         const jwt = await AsyncStorage.getItem('jwtToken');
         const response = await api.get(`/user/${phoneNumber}`, {
           headers: {
-            authorization: jwt, // Utilisation du token JWT dans les headers
+            authorization: jwt,
           },
         });
-        const userData = response.data;
-        setName(userData.name);
-        setPhone(userData.phoneNumber);
-        setProfileImage(userData.profile_image_url || null);
+        const userData = response.data.user;
+        setName(userData.name || '');
+        setPhone(userData.phone_number);
+        setProfileImage(userData.profile_image || null); 
       } catch (error) {
         console.error('Erreur lors de la récupération des données utilisateur:', error);
       }
@@ -74,13 +74,6 @@ export default function ProfileScreen({ route }) {
         <Text style={styles.changeImageText}>Changer l'image de profil</Text>
       </TouchableOpacity>
 
-      <Text style={styles.label}>Nom</Text>
-      <TextInput
-        style={styles.input}
-        value={name}
-        onChangeText={setName}
-      />
-
       <Text style={styles.label}>Téléphone</Text>
       <TextInput
         style={styles.input}
@@ -88,6 +81,13 @@ export default function ProfileScreen({ route }) {
         onChangeText={setPhone}
         keyboardType="phone-pad"
         editable={false} // Empêche l'édition du numéro de téléphone
+      />
+
+      <Text style={styles.label}>Nom</Text>
+      <TextInput
+        style={styles.input}
+        value={name}
+        onChangeText={setName}
       />
 
       <Button title="Enregistrer" onPress={handleSave} color="#25D366" />
