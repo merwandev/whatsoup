@@ -20,18 +20,21 @@ export default function LoginScreen({ navigation }) {
     const fullPhoneNumber = `+33${phoneNumber}`;
 
     try {
-      if (phoneNumber === "+33695720471") {
-        navigation.navigate('Verification', { phoneNumber: fullPhoneNumber });
-      }
 
-      const response = await api.post('/send-verification-code', { phoneNumber: fullPhoneNumber });
-
-      if (response.status === 200 && response.data.success) {
-        Alert.alert('Code envoyé', 'Un code de vérification a été envoyé à votre numéro.');
+      if (fullPhoneNumber === "+33695720471") {
         navigation.navigate('Verification', { phoneNumber: fullPhoneNumber });
       } else {
-        Alert.alert('Erreur', response.data.message);
+        const response = await api.post('/send-verification-code', { phoneNumber: fullPhoneNumber });
+
+        if (response.status === 200 && response.data.success) {
+          Alert.alert('Code envoyé', 'Un code de vérification a été envoyé à votre numéro.');
+          navigation.navigate('Verification', { phoneNumber: fullPhoneNumber });
+        } else {
+          Alert.alert('Erreur', response.data.message);
+        }
       }
+
+
     } catch (error) {
       console.error('Error details:', error);
       Alert.alert('Erreur', `Impossible d'envoyer le code de vérification. Détails: ${error.message}`);

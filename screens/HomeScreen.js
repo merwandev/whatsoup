@@ -22,7 +22,7 @@ export default function HomeScreen({ route, navigation }) {
 
                 const response = await api.get(`/conversations/${phoneNumber}`, {
                     headers: {
-                        authorization: jwt, // Ajout du token JWT dans les headers
+                        authorization: jwt,
                     },
                 });
 
@@ -62,7 +62,7 @@ export default function HomeScreen({ route, navigation }) {
                             navigation.navigate('Chat', {
                                 messages: item.messages, // Passer les messages
                                 title: item.title, // Passer le titre de la conversation
-                                phoneNumber,  
+                                phoneNumber,
                             })
                         }
                     >
