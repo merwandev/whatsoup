@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { View, Text, FlatList, Image, StyleSheet } from 'react-native';
 import axios from 'axios';
-import { useRoute } from '@react-navigation/native'; // Utilisation du hook useRoute
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const BACKEND_IP = '10.74.1.114';
 const BACKEND_PORT = '3001';
@@ -10,10 +10,7 @@ const api = axios.create({
     baseURL: `http://${BACKEND_IP}:${BACKEND_PORT}`,
 });
 
-export default function HomeScreen({route, navigate}) {
-    // const route = useRoute(); // Utilise useRoute pour accéder aux paramètres
-    console.log('Route:', route);
-    console.log('Params:', route.params);
+export default function HomeScreen({ route }) {
     const { phoneNumber } = route.params; // Récupérer le phoneNumber passé depuis VerificationScreen
     const [conversations, setConversations] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -21,11 +18,18 @@ export default function HomeScreen({route, navigate}) {
     useEffect(() => {
         const fetchConversations = async () => {
             try {
-                const response = await api.get(`/conversations/${phoneNumber}`);
-                setConversations(response.data);
+                const jwt = await AsyncStorage.getItem('jwtToken');
+                // console.log('JWT token:', jwt); // Vérification du token JWT
+
+                const response = await api.get(`/conversations/${phoneNumber}`, {
+                    headers: {
+                        authorization: jwt, // Ajout du token JWT dans les headers
+                    },
+                });
+                setConversations(response.data.conversations); // Met à jour avec les données des conversations
                 setLoading(false);
-                console.log('PhoneNumber:', phoneNumber);
-                console.log('Conversations:', response.data);
+                // console.log('PhoneNumber:', phoneNumber);
+                // console.log('Conversations:', response.data.conversations);
             } catch (error) {
                 console.error('Erreur lors de la récupération des conversations:', error);
             }
@@ -50,11 +54,14 @@ export default function HomeScreen({route, navigate}) {
         <View style={styles.container}>
             <FlatList
                 data={conversations}
-                keyExtractor={(item) => item.id.toString()}
+                keyExtractor={(item) => item.conversation_id.toString()} // Utilise conversation_id comme clé
                 renderItem={({ item }) => (
                     <View style={styles.item}>
-                        <Text style={styles.name}>{item.name}</Text>
-                        <Text style={styles.lastMessage}>{item.lastMessage}</Text>
+                        <Image source={{ uri: item.image_url }} style={styles.avatar} />
+                        <View style={styles.messageInfo}>
+                            <Text style={styles.name}>{item.title}</Text>
+                            <Text style={styles.lastMessage}>{item.last_message}</Text> 
+                        </View>
                     </View>
                 )}
             />
@@ -69,9 +76,20 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     item: {
+        flexDirection: 'row',
+        alignItems: 'center',
         padding: 16,
         borderBottomWidth: 1,
         borderBottomColor: '#ccc',
+    },
+    avatar: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        marginRight: 16,
+    },
+    messageInfo: {
+        flex: 1,
     },
     name: {
         fontWeight: 'bold',

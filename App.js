@@ -13,7 +13,10 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-function HomeTabs() {
+function HomeTabs({ route }) {
+  // Récupère le phoneNumber depuis la route.params
+  const { phoneNumber } = route.params; 
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -34,9 +37,10 @@ function HomeTabs() {
         tabBarInactiveTintColor: 'gray',
       })}
     >
-      <Tab.Screen name="Chats" component={HomeScreen} />
+      {/* On passe phoneNumber en tant que prop à HomeScreen */}
+      <Tab.Screen name="Chats" component={HomeScreen} initialParams={{ phoneNumber }} />
       <Tab.Screen name="NewChat" component={NewChatScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} initialParams={{ phoneNumber }} />
     </Tab.Navigator>
   );
 }

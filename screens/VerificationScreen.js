@@ -26,7 +26,7 @@
                 if (response.data.success) {
                     await AsyncStorage.setItem('jwtToken', response.data.token);
                     navigation.navigate('Home', {
-                        phoneNumber: '1234567890',
+                        phoneNumber: phoneNumber,
                       });
                 } else {
                     Alert.alert('Erreur', response.data.message);
