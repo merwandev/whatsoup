@@ -1,89 +1,75 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Audio } from 'expo-av';
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, Image } from 'react-native';
 
-export default function Message({ message }) {
-  const [sound, setSound] = useState(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  // Fonction pour lire l'audio
-  const playSound = async () => {
-    if (isPlaying) {
-      // Si le son est déjà en train de jouer, on l'arrête
-      if (sound) {
-        await sound.stopAsync();
-        setIsPlaying(false);
-      }
-      return;
-    }
-
-    try {
-      // Charger et jouer le son
-      const { sound: newSound } = await Audio.Sound.createAsync({ uri: message.text });
-      setSound(newSound);
-      await newSound.playAsync();
-      setIsPlaying(true);
-
-      // Lorsque la lecture est terminée, réinitialiser l'état
-      newSound.setOnPlaybackStatusUpdate((status) => {
-        if (status.didJustFinish) {
-          setIsPlaying(false);
-          setSound(null);
-        }
-      });
-    } catch (error) {
-      console.error('Erreur lors de la lecture de l\'audio', error);
-    }
-  };
+const Message = ({ message, isUserMessage, profile_image, user_name, phoneNumber }) => {
 
   useEffect(() => {
-    return sound
-      ? () => {
-          sound.unloadAsync(); // Décharger le son lorsque le composant est démonté ou le son change
-        }
-      : undefined;
-  }, [sound]);
 
-  // Affichage des différents types de messages
-  if (message.type === 'text') {
-    return (
-      <View style={styles.textMessageContainer}>
-        <Text style={styles.textMessage}>{message.text}</Text>
+  }, [profile_image, user_name]);
+
+  const displayName = user_name || phoneNumber;
+  
+  // Utiliser une image par défaut si profile_image est null
+  const profileImage = profile_image ? { uri: profile_image } : require('../assets/default-profile.jpg');
+  
+  return (
+    <View
+      style={[
+        styles.messageContainer,
+        isUserMessage ? styles.userMessage : styles.otherMessage,
+      ]}
+    >
+      <View style={styles.userInfoContainer}>
+        <Image source={profileImage} style={styles.profileImage} />
+        <Text style={styles.userName}>{displayName}</Text>
       </View>
-    );
-  }
-
-  if (message.type === 'audio') {
-    return (
-      <View style={styles.audioMessageContainer}>
-        <TouchableOpacity onPress={playSound}>
-          <Text style={styles.audioMessage}>{isPlaying ? '⏸️ Arrêter' : '▶️ Écouter le message vocal'}</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  return null;
-}
+      <Text style={styles.messageText}>{message.content}</Text>
+      <Text style={styles.timestamp}>{new Date(message.created_at).toLocaleTimeString()}</Text>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
-  textMessageContainer: {
+  messageContainer: {
     padding: 10,
-    marginVertical: 5,
-    backgroundColor: '#DCF8C6',
-    alignSelf: 'flex-start',
     borderRadius: 10,
+    marginVertical: 5,
     maxWidth: '80%',
   },
-  textMessage: {
-    fontSize: 16,
+  userMessage: {
+    backgroundColor: '#DCF8C6', // Vert pour les messages de l'utilisateur
+    alignSelf: 'flex-end', // Aligner à droite pour l'utilisateur
   },
-  audioMessageContainer: {
-    alignSelf: 'flex-start',
-    marginVertical: 5,
+  otherMessage: {
+    backgroundColor: '#fff', // Blanc pour les autres
+    alignSelf: 'flex-start', // Aligner à gauche pour les autres
   },
-  audioMessage: {
+  messageText: {
     fontSize: 16,
-    color: '#25D366',
+    color: '#000',
+  },
+  timestamp: {
+    fontSize: 10,
+    color: 'gray',
+    marginTop: 5,
+    textAlign: 'right',
+  },
+  userInfoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  profileImage: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    marginRight: 8,
+  },
+  userName: {
+    fontSize: 14,
+    fontWeight: 'bold',
   },
 });
+
+
+export default Message;

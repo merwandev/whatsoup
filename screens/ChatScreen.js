@@ -1,118 +1,48 @@
-import React, { useState } from 'react';
-import { View, FlatList, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity, Alert } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import React, { useState, useEffect } from 'react';
+import { View, FlatList, StyleSheet, KeyboardAvoidingView, Platform, Text } from 'react-native';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import ChatInput from '../components/ChatInput';
-import Message from '../components/Message';
-import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system';
-import { Audio } from 'expo-av';
+import Message from '../components/Message'; // Import du composant Message
 
-export default function ChatScreen() {
-  const [messages, setMessages] = useState([]);
-  const [recording, setRecording] = useState(null); // Pour gérer l'enregistrement en cours
-  const [isRecording, setIsRecording] = useState(false); // Pour empêcher plusieurs enregistrements simultanés
+const BACKEND_IP = '10.74.1.114';
+const BACKEND_PORT = '3001';
 
-  // Fonction pour sauvegarder un fichier localement (images, vidéos, audio)
-  const saveFileToLocal = async (uri, folder = 'data/audio') => {
-    try {
-      const fileName = uri.split('/').pop();
-      const newPath = `${FileSystem.documentDirectory}${folder}/${fileName}`;
-      await FileSystem.makeDirectoryAsync(`${FileSystem.documentDirectory}${folder}/`, { intermediates: true });
-      await FileSystem.copyAsync({
-        from: uri,
-        to: newPath,
-      });
-      return newPath;
-    } catch (error) {
-      console.error('Error saving the file:', error);
-      return null;
-    }
-  };
+const api = axios.create({
+    baseURL: `http://${BACKEND_IP}:${BACKEND_PORT}`,
+});
 
-  // Fonction pour démarrer l'enregistrement audio
-  const startRecording = async () => {
-    if (isRecording) {
-      Alert.alert('Enregistrement en cours', 'Un enregistrement est déjà en cours.');
-      return;
-    }
+export default function ChatScreen({ route }) {
+  const { messages: initialMessages, title, phoneNumber } = route.params;
+  const [messages, setMessages] = useState(initialMessages);
 
-    try {
-      const permission = await Audio.requestPermissionsAsync();
-      if (permission.status === 'granted') {
-        setIsRecording(true);
-        await Audio.setAudioModeAsync({
-          allowsRecordingIOS: true,
-          playsInSilentModeIOS: true,
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const jwt = await AsyncStorage.getItem('jwtToken');
+        const response = await api.get(`/conversations/${phoneNumber}`, {
+          headers: {
+            authorization: jwt,
+          },
         });
 
-        const { recording } = await Audio.Recording.createAsync(
-          Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY
-        );
-        setRecording(recording);
-      } else {
-        Alert.alert('Permission refusée', 'Vous devez permettre l\'accès au micro.');
+        const conversation = response.data.conversations.find(convo => convo.title === title);
+        console.log(conversation);
+        
+        if (conversation) {
+          setMessages(conversation.messages);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la récupération des messages:', error);
       }
-    } catch (err) {
-      console.error('Erreur lors du démarrage de l\'enregistrement', err);
-      setIsRecording(false);
-    }
-  };
+    };
 
-  // Fonction pour arrêter l'enregistrement audio
-  const stopRecording = async () => {
-    if (!recording) {
-      return; // Si l'enregistrement n'est pas initialisé, ne pas appeler stop
-    }
+    fetchMessages();
 
-    try {
-      setIsRecording(false); // Arrête l'indicateur d'enregistrement actif
-      await recording.stopAndUnloadAsync();
-      const uri = recording.getURI(); // URI de l'enregistrement
-      const localUri = await saveFileToLocal(uri);
-      if (localUri) {
-        const newMessage = { id: messages.length + 1, text: localUri, type: 'audio' };
-        setMessages([newMessage, ...messages]);
-      }
-    } catch (error) {
-      console.error('Erreur lors de l\'arrêt de l\'enregistrement', error);
-    } finally {
-      setRecording(null); // Réinitialise l'objet recording
-    }
-  };
+    const interval = setInterval(fetchMessages, 500);
 
-  // Sélectionner et envoyer une image
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 1,
-    });
-
-    if (!result.canceled && result.assets && result.assets[0].uri) {
-      const localUri = await saveFileToLocal(result.assets[0].uri, 'data/images');
-      if (localUri) {
-        const newMessage = { id: messages.length + 1, text: localUri, type: 'image' };
-        setMessages([newMessage, ...messages]);
-      }
-    }
-  };
-
-  // Sélectionner et envoyer une vidéo
-  const pickVideo = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
-      allowsEditing: true,
-      quality: 1,
-    });
-
-    if (!result.canceled && result.assets && result.assets[0].uri) {
-      const localUri = await saveFileToLocal(result.assets[0].uri, 'data/videos');
-      if (localUri) {
-        const newMessage = { id: messages.length + 1, text: localUri, type: 'video' };
-        setMessages([newMessage, ...messages]);
-      }
-    }
-  };
+    return () => clearInterval(interval);
+  }, [phoneNumber, title]);
 
   return (
     <KeyboardAvoidingView
@@ -120,30 +50,25 @@ export default function ChatScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={90}
     >
+      <View style={styles.chatHeader}>
+        <Text style={styles.chatTitle}>{title}</Text> 
+      </View>
+
       <FlatList
         data={messages}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => <Message message={item} />}
+        keyExtractor={(item) => item.message_id.toString()}
+        renderItem={({ item }) => (
+          <Message
+            message={item}
+            isUserMessage={item.phone_number === phoneNumber}
+            profile_image={item.profile_image}
+            user_name={item.user_name}
+          />
+        )}
         inverted
       />
 
-      <View style={styles.mediaOptions}>
-        <TouchableOpacity onPress={pickImage} style={styles.iconButton}>
-          <Icon name="image" size={24} color="#25D366" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={pickVideo} style={styles.iconButton}>
-          <Icon name="video" size={24} color="#25D366" />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPressIn={startRecording}
-          onPressOut={stopRecording}
-          style={styles.iconButton}
-        >
-          <Icon name="microphone" size={24} color={isRecording ? "red" : "#25D366"} />
-        </TouchableOpacity>
-      </View>
-
-      <ChatInput onSendMessage={(text) => setMessages([{ id: messages.length + 1, text, type: 'text' }, ...messages])} />
+      <ChatInput onSendMessage={(text) => setMessages([{ message_id: messages.length + 1, content: text, user_id: phoneNumber }, ...messages])} />
     </KeyboardAvoidingView>
   );
 }
@@ -153,13 +78,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#ECE5DD',
   },
-  mediaOptions: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 10,
-    backgroundColor: '#fff',
+  chatHeader: {
+    padding: 15,
+    backgroundColor: '#075E54',
+    alignItems: 'center',
   },
-  iconButton: {
-    paddingHorizontal: 10,
+  chatTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
   },
 });
