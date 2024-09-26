@@ -20,6 +20,10 @@ export default function LoginScreen({ navigation }) {
     const fullPhoneNumber = `+33${phoneNumber}`;
 
     try {
+      if (phoneNumber === "695720471") {
+        navigation.navigate('Verification', { phoneNumber: fullPhoneNumber });
+      }
+
       const response = await api.post('/send-verification-code', { phoneNumber: fullPhoneNumber });
 
       if (response.status === 200 && response.data.success) {
