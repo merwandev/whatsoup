@@ -7,12 +7,16 @@ import HomeScreen from './screens/HomeScreen';
 import ChatScreen from './screens/ChatScreen';
 import NewChatScreen from './screens/NewChatScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import VerificationScreen from './screens/VerificationScreen';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-function HomeTabs() {
+function HomeTabs({ route }) {
+  // Récupère le phoneNumber depuis la route.params
+  const { phoneNumber } = route.params; 
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -33,9 +37,10 @@ function HomeTabs() {
         tabBarInactiveTintColor: 'gray',
       })}
     >
-      <Tab.Screen name="Chats" component={HomeScreen} />
+      {/* On passe phoneNumber en tant que prop à HomeScreen */}
+      <Tab.Screen name="Chats" component={HomeScreen} initialParams={{ phoneNumber }} />
       <Tab.Screen name="NewChat" component={NewChatScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} initialParams={{ phoneNumber }} />
     </Tab.Navigator>
   );
 }
@@ -44,7 +49,8 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Login">
-        {/* <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'Login' }} /> */}
+        <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'Login', headerLeft: null  }} />
+        <Stack.Screen name="Verification" component={VerificationScreen} />
         <Stack.Screen 
           name="Home" 
           component={HomeTabs} 

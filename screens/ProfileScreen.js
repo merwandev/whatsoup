@@ -1,26 +1,57 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, TextInput, Button, StyleSheet, Text, Image, TouchableOpacity, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function ProfileScreen() {
-  const [name, setName] = useState('John Doe');
-  const [email, setEmail] = useState('john.doe@example.com');
-  const [phone, setPhone] = useState('0123456789');
-  const [profileImage, setProfileImage] = useState(null); // Default profile image URI or null
+const BACKEND_IP = '10.74.1.114';
+const BACKEND_PORT = '3001';
+
+const api = axios.create({
+    baseURL: `http://${BACKEND_IP}:${BACKEND_PORT}`,
+});
+
+export default function ProfileScreen({ route }) {
+  const { phoneNumber } = route.params; // Récupérer le numéro de téléphone depuis les paramètres
+  const [name, setName] = useState('Nom par défaut');
+  const [phone, setPhone] = useState(phoneNumber || 'Numéro par défaut');
+  const [profileImage, setProfileImage] = useState(null); // URI de l'image de profil par défaut ou null
+
+  // Charger les informations utilisateur depuis l'API
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const jwt = await AsyncStorage.getItem('jwtToken');
+        const response = await api.get(`/user/${phoneNumber}`, {
+          headers: {
+            authorization: jwt, // Utilisation du token JWT dans les headers
+          },
+        });
+        const userData = response.data;
+        setName(userData.name);
+        setPhone(userData.phoneNumber);
+        setProfileImage(userData.profile_image_url || null);
+      } catch (error) {
+        console.error('Erreur lors de la récupération des données utilisateur:', error);
+      }
+    };
+
+    if (phoneNumber) {
+      fetchUserData();
+    }
+  }, [phoneNumber]);
 
   const handleSave = () => {
     Alert.alert('Profil mis à jour', 'Vos informations de profil ont été enregistrées.');
   };
 
   const pickImage = async () => {
-    // Demander la permission d'accès aux photos
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (permissionResult.granted === false) {
       Alert.alert("Permission refusée", "Vous devez permettre l'accès à votre galerie pour changer l'image de profil.");
       return;
     }
 
-    // Ouvrir la galerie pour choisir une image
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -49,14 +80,6 @@ export default function ProfileScreen() {
         value={name}
         onChangeText={setName}
       />
-      
-      <Text style={styles.label}>E-mail</Text>
-      <TextInput
-        style={styles.input}
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-      />
 
       <Text style={styles.label}>Téléphone</Text>
       <TextInput
@@ -64,6 +87,7 @@ export default function ProfileScreen() {
         value={phone}
         onChangeText={setPhone}
         keyboardType="phone-pad"
+        editable={false} // Empêche l'édition du numéro de téléphone
       />
 
       <Button title="Enregistrer" onPress={handleSave} color="#25D366" />
