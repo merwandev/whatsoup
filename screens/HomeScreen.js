@@ -16,7 +16,7 @@ export default function HomeScreen({ route, navigation }) {
     const [conversations, setConversations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [deletedConversations, setDeletedConversations] = useState([]);
-    const [openedRows, setOpenedRows] = useState({}); // État pour les lignes ouvertes
+    const [openedRows, setOpenedRows] = useState({});
 
     useEffect(() => {
         const loadDeletedConversations = async () => {

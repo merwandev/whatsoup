@@ -43,15 +43,13 @@ export default function NewChatScreen({ route, navigation }) {
 
       const jwt = await AsyncStorage.getItem('jwtToken');
 
-      var fullPhone =  phone.startsWith('+33') ? phone : '+33' + phone;
+      var fullPhone = phone.startsWith('+33') ? phone : '+33' + phone;
       const response = await api.get(`/user/${fullPhone}`, {
         headers: {
-            authorization: jwt,
+          authorization: jwt,
         },
       });
       const userId = response.data.user.id;
-      console.log(`Infos utilisateur pour le numéro ${phone}:`, response.data);
-      console.log(`ID de l'utilisateur:`, userId);
 
       setUserIds((prevUserIds) => {
         if (!prevUserIds.includes(userId)) {
@@ -59,7 +57,6 @@ export default function NewChatScreen({ route, navigation }) {
         }
         return prevUserIds;
       });
-      // console.log(`UserIds:`, userIds);
     } catch (error) {
       console.error(`Erreur lors de la récupération des informations utilisateur pour ${fullPhone}:`, error);
     }
@@ -72,7 +69,6 @@ export default function NewChatScreen({ route, navigation }) {
         await fetchUserInfo(phoneNumber);
 
         const jwt = await AsyncStorage.getItem('jwtToken');
-        // console.log(`UserIds 2 :`, userIds);
         const requestBody = {
           title: conversationName,
           user_ids: userIds,
@@ -81,7 +77,7 @@ export default function NewChatScreen({ route, navigation }) {
 
         const response = await api.post('/conversations', requestBody, {
           headers: {
-              authorization: jwt,
+            authorization: jwt,
           },
         });
 

@@ -9,7 +9,7 @@ const BACKEND_IP = '10.74.1.114';
 const BACKEND_PORT = '3001';
 
 const api = axios.create({
-    baseURL: `http://${BACKEND_IP}:${BACKEND_PORT}`,
+  baseURL: `http://${BACKEND_IP}:${BACKEND_PORT}`,
 });
 
 export default function ChatScreen({ route }) {
@@ -41,7 +41,7 @@ export default function ChatScreen({ route }) {
     try {
       const jwt = await AsyncStorage.getItem('jwtToken');
 
-      const user_id = await fetchUserId(phoneNumber); 
+      const user_id = await fetchUserId(phoneNumber);
 
       if (!user_id) {
         console.error('Impossible de récupérer l\'userId pour le numéro de téléphone.');
@@ -52,7 +52,7 @@ export default function ChatScreen({ route }) {
         conversation_id: conversations_id,
         user_id,
         content,
-        image_url: null, 
+        image_url: null,
         video_url: null,
         audio_url: null,
       };
@@ -108,7 +108,7 @@ export default function ChatScreen({ route }) {
       keyboardVerticalOffset={90}
     >
       <View style={styles.chatHeader}>
-        <Text style={styles.chatTitle}>{title}</Text> 
+        <Text style={styles.chatTitle}>{title}</Text>
       </View>
 
       <FlatList
