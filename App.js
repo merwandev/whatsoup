@@ -39,7 +39,7 @@ function HomeTabs({ route }) {
     >
       {/* On passe phoneNumber en tant que prop à HomeScreen */}
       <Tab.Screen name="Chats" component={HomeScreen} initialParams={{ phoneNumber }} />
-      <Tab.Screen name="NewChat" component={NewChatScreen} />
+      <Tab.Screen name="NewChat" component={NewChatScreen}  initialParams={{ phoneNumber }} />
       <Tab.Screen name="Profile" component={ProfileScreen} initialParams={{ phoneNumber }} />
     </Tab.Navigator>
   );
