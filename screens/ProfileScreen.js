@@ -12,11 +12,12 @@ const api = axios.create({
 });
 
 export default function ProfileScreen({ route }) {
+
   const { phoneNumber } = route.params;
   const [name, setName] = useState('');
   const [profileImage, setProfileImage] = useState(null);
   const [userId, setUserId] = useState(null); 
-  const [statusMessage, setStatusMessage] = useState(''); // État pour stocker les messages de statut
+  const [statusMessage, setStatusMessage] = useState(''); 
 
   useEffect(() => {
     const fetchUserProfile = async () => {

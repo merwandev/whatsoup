@@ -8,8 +8,7 @@ const Message = ({ message, isUserMessage, profile_image, user_name, phoneNumber
   }, [profile_image, user_name]);
 
   const displayName = user_name || phoneNumber;
-  
-  // Utiliser une image par défaut si profile_image est null
+
   const profileImage = profile_image ? { uri: profile_image } : require('../assets/default-profile.jpg');
   
   return (
@@ -37,12 +36,12 @@ const styles = StyleSheet.create({
     maxWidth: '80%',
   },
   userMessage: {
-    backgroundColor: '#DCF8C6', // Vert pour les messages de l'utilisateur
-    alignSelf: 'flex-end', // Aligner à droite pour l'utilisateur
+    backgroundColor: '#DCF8C6',
+    alignSelf: 'flex-end',
   },
   otherMessage: {
-    backgroundColor: '#fff', // Blanc pour les autres
-    alignSelf: 'flex-start', // Aligner à gauche pour les autres
+    backgroundColor: '#fff',
+    alignSelf: 'flex-start',
   },
   messageText: {
     fontSize: 16,
