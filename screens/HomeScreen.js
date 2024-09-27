@@ -14,7 +14,7 @@ export default function HomeScreen({ route, navigation }) {
     const { phoneNumber } = route.params;
     const [conversations, setConversations] = useState([]);
     const [loading, setLoading] = useState(true);
-    console.log('conversation reçus dans HomeScreen:', conversations);
+    // console.log('conversation reçus dans HomeScreen:', conversations);
     useEffect(() => {
         const fetchConversations = async () => {
             try {
