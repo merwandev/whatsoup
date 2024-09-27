@@ -56,6 +56,7 @@ export default function HomeScreen({ route, navigation }) {
                 );
 
                 setConversations(filteredConversations);
+
                 setLoading(false);
             } catch (error) {
                 console.error('Erreur lors de la récupération des conversations:', error);
@@ -131,6 +132,7 @@ export default function HomeScreen({ route, navigation }) {
                                 messages: item.messages,
                                 title: item.title,
                                 phoneNumber,
+                                conversations_id: item.conversation_id,
                             })
                         }
                     >

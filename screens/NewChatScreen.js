@@ -1,24 +1,23 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, StyleSheet, Text, Alert, Image, TouchableOpacity } from 'react-native';
-import axios from 'axios'; // Importer axios pour faire les requêtes API
+import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const BACKEND_IP = '10.74.1.114'; // Remplacer par l'IP de ton serveur backend
-const BACKEND_PORT = '3001'; // Remplacer par le port de ton serveur backend
+const BACKEND_IP = '10.74.1.114';
+const BACKEND_PORT = '3001';
 
 const api = axios.create({
   baseURL: `http://${BACKEND_IP}:${BACKEND_PORT}`,
 });
 
 export default function NewChatScreen({ route, navigation }) {
-  const { phoneNumber } = route.params; // Récupérer le phoneNumber passé via route.params
+  const { phoneNumber } = route.params;
   const [contactInfo, setContactInfo] = useState('');
   const [conversationName, setConversationName] = useState('');
   const [imageUri, setImageUri] = useState(null);
   const [userIds, setUserIds] = useState([]);
 
-  // Fonction pour sélectionner une image à partir de la galerie
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
@@ -39,13 +38,13 @@ export default function NewChatScreen({ route, navigation }) {
     }
   };
 
-  // Fonction pour faire un GET sur /user/:phoneNumber
   const fetchUserInfo = async (phone) => {
     try {
 
       const jwt = await AsyncStorage.getItem('jwtToken');
 
-      const response = await api.get(`/user/+33${phone}`, {
+      var fullPhone =  phone.startsWith('+33') ? phone : '+33' + phone;
+      const response = await api.get(`/user/${fullPhone}`, {
         headers: {
             authorization: jwt,
         },
@@ -54,29 +53,32 @@ export default function NewChatScreen({ route, navigation }) {
       console.log(`Infos utilisateur pour le numéro ${phone}:`, response.data);
       console.log(`ID de l'utilisateur:`, userId);
 
-      setUserIds( [...prevUserIds, userId] );
-      console.log(`UserIds:`, userIds);
+      setUserIds((prevUserIds) => {
+        if (!prevUserIds.includes(userId)) {
+          return [...prevUserIds, userId];
+        }
+        return prevUserIds;
+      });
+      // console.log(`UserIds:`, userIds);
     } catch (error) {
-      console.error(`Erreur lors de la récupération des informations utilisateur pour ${phone}:`, error);
+      console.error(`Erreur lors de la récupération des informations utilisateur pour ${fullPhone}:`, error);
     }
   };
 
   const handleNewChat = async () => {
     if (contactInfo.trim() && conversationName.trim()) {
       try {
-        // Rechercher les infos utilisateur pour le contact saisi et l'utilisateur connecté
-        await fetchUserInfo(contactInfo); // Fetch les infos pour le contact
-        await fetchUserInfo(phoneNumber); // Fetch les infos pour l'utilisateur connecté via route.params
+        await fetchUserInfo(contactInfo);
+        await fetchUserInfo(phoneNumber);
 
         const jwt = await AsyncStorage.getItem('jwtToken');
-        // Corps de la requête
+        // console.log(`UserIds 2 :`, userIds);
         const requestBody = {
           title: conversationName,
-          user_ids: userIds, // Remplacer par les vrais IDs
+          user_ids: userIds,
           image_url: imageUri || 'https://inout-cotedazur.com/wp-content/uploads/2016/09/Tete.jpg',
         };
 
-        // Envoyer la requête POST à l'API
         const response = await api.post('/conversations', requestBody, {
           headers: {
               authorization: jwt,

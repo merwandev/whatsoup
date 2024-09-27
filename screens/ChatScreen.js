@@ -3,7 +3,7 @@ import { View, FlatList, StyleSheet, KeyboardAvoidingView, Platform, Text } from
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ChatInput from '../components/ChatInput';
-import Message from '../components/Message'; // Import du composant Message
+import Message from '../components/Message';
 
 const BACKEND_IP = '10.74.1.114';
 const BACKEND_PORT = '3001';
@@ -13,8 +13,67 @@ const api = axios.create({
 });
 
 export default function ChatScreen({ route }) {
-  const { messages: initialMessages, title, phoneNumber } = route.params;
+  const { messages: initialMessages, title, phoneNumber, conversations_id } = route.params;
   const [messages, setMessages] = useState(initialMessages);
+
+  const fetchUserId = async (phone) => {
+    try {
+      const jwt = await AsyncStorage.getItem('jwtToken');
+      const fullPhone = phone.startsWith('+33') ? phone : '+33' + phone;
+
+      const response = await api.get(`/user/${fullPhone}`, {
+        headers: {
+          authorization: jwt,
+        },
+      });
+
+      const userId = response.data.user.id;
+      console.log(`ID de l'utilisateur pour le numéro ${fullPhone}:`, userId);
+      return userId;
+    } catch (error) {
+      console.error(`Erreur lors de la récupération des informations utilisateur pour ${fullPhone}:`, error);
+      return null;
+    }
+  };
+
+
+  const sendMessage = async (content) => {
+    try {
+      const jwt = await AsyncStorage.getItem('jwtToken');
+
+      const user_id = await fetchUserId(phoneNumber); 
+
+      if (!user_id) {
+        console.error('Impossible de récupérer l\'userId pour le numéro de téléphone.');
+        return;
+      }
+      console.log('conversation_id:', conversations_id);
+      const requestBody = {
+        conversation_id: conversations_id,
+        user_id,
+        content,
+        image_url: null, 
+        video_url: null,
+        audio_url: null,
+      };
+
+      console.log('Corps de la requête envoyée pour le message:', requestBody);
+
+      const response = await api.post('/messages', requestBody, {
+        headers: {
+          authorization: jwt,
+        },
+      });
+
+      if (response.data.success) {
+        setMessages([{ message_id: messages.length + 1, content, user_id, created_at: new Date().toISOString() }, ...messages]);
+      } else {
+        console.error('Erreur lors de l\'envoi du message:', response.data);
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi du message:', error);
+    }
+  };
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -27,8 +86,6 @@ export default function ChatScreen({ route }) {
         });
 
         const conversation = response.data.conversations.find(convo => convo.title === title);
-        console.log(conversation);
-        
         if (conversation) {
           setMessages(conversation.messages);
         }
@@ -39,7 +96,7 @@ export default function ChatScreen({ route }) {
 
     fetchMessages();
 
-    const interval = setInterval(fetchMessages, 500);
+    const interval = setInterval(fetchMessages, 50);
 
     return () => clearInterval(interval);
   }, [phoneNumber, title]);
@@ -63,12 +120,13 @@ export default function ChatScreen({ route }) {
             isUserMessage={item.phone_number === phoneNumber}
             profile_image={item.profile_image}
             user_name={item.user_name}
+            phoneNumber={item.phone_number}
           />
         )}
         inverted
       />
 
-      <ChatInput onSendMessage={(text) => setMessages([{ message_id: messages.length + 1, content: text, user_id: phoneNumber }, ...messages])} />
+      <ChatInput onSendMessage={sendMessage} />
     </KeyboardAvoidingView>
   );
 }
