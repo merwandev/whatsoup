@@ -14,7 +14,6 @@ export default function HomeScreen({ route, navigation }) {
     const { phoneNumber } = route.params;
     const [conversations, setConversations] = useState([]);
     const [loading, setLoading] = useState(true);
-    // console.log('conversation reçus dans HomeScreen:', conversations);
     useEffect(() => {
         const fetchConversations = async () => {
             try {
@@ -26,7 +25,7 @@ export default function HomeScreen({ route, navigation }) {
                     },
                 });
 
-                setConversations(response.data.conversations); // Met à jour avec les données des conversations
+                setConversations(response.data.conversations);
                 setLoading(false);
             } catch (error) {
                 console.error('Erreur lors de la récupération des conversations:', error);
@@ -60,9 +59,10 @@ export default function HomeScreen({ route, navigation }) {
                     <TouchableOpacity
                         onPress={() =>
                             navigation.navigate('Chat', {
-                                messages: item.messages, // Passer les messages
-                                title: item.title, // Passer le titre de la conversation
+                                messages: item.messages,
+                                title: item.title, 
                                 phoneNumber,
+                                conversations_id: item.conversation_id,
                             })
                         }
                     >

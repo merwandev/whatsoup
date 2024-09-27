@@ -12,12 +12,11 @@ const api = axios.create({
 });
 
 export default function ProfileScreen({ route }) {
-  const { phoneNumber } = route.params; // Récupérer le numéro de téléphone depuis les paramètres
+  const { phoneNumber } = route.params; 
   const [name, setName] = useState('Nom par défaut');
   const [phone, setPhone] = useState(phoneNumber || 'Numéro par défaut');
-  const [profileImage, setProfileImage] = useState(null); // URI de l'image de profil par défaut ou null
+  const [profileImage, setProfileImage] = useState(null);
 
-  // Charger les informations utilisateur depuis l'API
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -60,7 +59,7 @@ export default function ProfileScreen({ route }) {
     });
 
     if (!result.canceled) {
-      setProfileImage(result.assets[0].uri); // Mettre à jour l'URI de l'image choisie
+      setProfileImage(result.assets[0].uri);
     }
   };
 
@@ -68,7 +67,7 @@ export default function ProfileScreen({ route }) {
     <View style={styles.container}>
       <TouchableOpacity onPress={pickImage}>
         <Image
-          source={profileImage ? { uri: profileImage } : require('../assets/default-profile.jpg')} // Utiliser l'image par défaut ou celle sélectionnée
+          source={profileImage ? { uri: profileImage } : require('../assets/default-profile.jpg')}
           style={styles.profileImage}
         />
         <Text style={styles.changeImageText}>Changer l'image de profil</Text>
@@ -80,7 +79,7 @@ export default function ProfileScreen({ route }) {
         value={phone}
         onChangeText={setPhone}
         keyboardType="phone-pad"
-        editable={false} // Empêche l'édition du numéro de téléphone
+        editable={false} 
       />
 
       <Text style={styles.label}>Nom</Text>
