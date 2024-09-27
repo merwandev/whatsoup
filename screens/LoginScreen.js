@@ -27,7 +27,6 @@ export default function LoginScreen({ navigation }) {
         const response = await api.post('/send-verification-code', { phoneNumber: fullPhoneNumber });
 
         if (response.status === 200 && response.data.success) {
-          Alert.alert('Code envoyé', 'Un code de vérification a été envoyé à votre numéro.');
           navigation.navigate('Verification', { phoneNumber: fullPhoneNumber });
         } else {
           Alert.alert('Erreur', response.data.message);

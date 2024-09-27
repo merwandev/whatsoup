@@ -72,13 +72,12 @@ export default function NewChatScreen({ route, navigation }) {
         await fetchUserInfo(phoneNumber);
 
         const jwt = await AsyncStorage.getItem('jwtToken');
-        // console.log(`UserIds 2 :`, userIds);
         const requestBody = {
           title: conversationName,
           user_ids: userIds,
           image_url: imageUri || 'https://inout-cotedazur.com/wp-content/uploads/2016/09/Tete.jpg',
         };
-
+        
         const response = await api.post('/conversations', requestBody, {
           headers: {
               authorization: jwt,
@@ -86,8 +85,7 @@ export default function NewChatScreen({ route, navigation }) {
         });
 
         if (response.data.success) {
-          Alert.alert('Nouveau Chat', `Chat démarré avec ${contactInfo}`);
-          navigation.navigate('Chat', { userId: contactInfo });
+          navigation.navigate('Chats', { userId: contactInfo });
         } else {
           Alert.alert('Erreur', 'Impossible de démarrer le chat.');
         }
