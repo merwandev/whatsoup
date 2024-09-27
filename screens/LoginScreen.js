@@ -57,10 +57,6 @@ export default function LoginScreen({ navigation }) {
       <TouchableOpacity style={styles.button} onPress={sendVerificationCode}>
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
-
-      <TouchableOpacity onPress={handleSignUp} style={styles.signUpContainer}>
-        <Text style={styles.signUpText}>ou inscrivez-vous</Text>
-      </TouchableOpacity>
     </View>
   );
 }
