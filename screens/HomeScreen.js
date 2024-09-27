@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity } from 'react-native';
-import axios from 'axios';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { SwipeListView } from 'react-native-swipe-list-view';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 const BACKEND_IP = '10.74.1.114';
 const BACKEND_PORT = '3001';
@@ -14,19 +15,47 @@ export default function HomeScreen({ route, navigation }) {
     const { phoneNumber } = route.params;
     const [conversations, setConversations] = useState([]);
     const [loading, setLoading] = useState(true);
-    // console.log('conversation reçus dans HomeScreen:', conversations);
+    const [deletedConversations, setDeletedConversations] = useState([]);
+    const [openedRows, setOpenedRows] = useState({}); // État pour les lignes ouvertes
+
+    useEffect(() => {
+        const loadDeletedConversations = async () => {
+            try {
+                const storedDeletedConversations = await AsyncStorage.getItem('deletedConversations');
+                if (storedDeletedConversations) {
+                    setDeletedConversations(JSON.parse(storedDeletedConversations));
+                }
+            } catch (error) {
+                console.error('Erreur lors du chargement des conversations supprimées', error);
+            }
+        };
+
+        loadDeletedConversations();
+    }, []);
+
+    const saveDeletedConversations = async (updatedDeletedConversations) => {
+        try {
+            await AsyncStorage.setItem('deletedConversations', JSON.stringify(updatedDeletedConversations));
+        } catch (error) {
+            console.error('Erreur lors de la sauvegarde des conversations supprimées', error);
+        }
+    };
+
     useEffect(() => {
         const fetchConversations = async () => {
             try {
                 const jwt = await AsyncStorage.getItem('jwtToken');
-
                 const response = await api.get(`/conversations/${phoneNumber}`, {
                     headers: {
                         authorization: jwt,
                     },
                 });
 
-                setConversations(response.data.conversations); // Met à jour avec les données des conversations
+                const filteredConversations = response.data.conversations.filter(
+                    (conv) => !deletedConversations.includes(conv.conversation_id)
+                );
+
+                setConversations(filteredConversations);
                 setLoading(false);
             } catch (error) {
                 console.error('Erreur lors de la récupération des conversations:', error);
@@ -41,7 +70,46 @@ export default function HomeScreen({ route, navigation }) {
         } else {
             console.error('Numéro de téléphone non défini');
         }
-    }, [phoneNumber]);
+    }, [phoneNumber, deletedConversations]);
+
+    const deleteConversation = async (conversation_id) => {
+        const updatedDeletedConversations = [...deletedConversations, conversation_id];
+
+        setDeletedConversations(updatedDeletedConversations);
+        await saveDeletedConversations(updatedDeletedConversations);
+
+        setConversations(conversations.filter(item => item.conversation_id !== conversation_id));
+    };
+
+    const handleRowOpen = (rowKey) => {
+        setOpenedRows((prev) => ({ ...prev, [rowKey]: true }));
+    };
+
+    const handleRowClose = (rowKey) => {
+        setOpenedRows((prev) => {
+            const newRows = { ...prev };
+            delete newRows[rowKey];
+            return newRows;
+        });
+    };
+
+    const handleNewMessage = (conversation) => {
+        if (deletedConversations.includes(conversation.conversation_id)) {
+            const updatedDeletedConversations = deletedConversations.filter(
+                (id) => id !== conversation.conversation_id
+            );
+            setDeletedConversations(updatedDeletedConversations);
+            saveDeletedConversations(updatedDeletedConversations);
+        }
+
+        setConversations((prevConversations) => {
+            const existingConv = prevConversations.find(conv => conv.conversation_id === conversation.conversation_id);
+            if (!existingConv) {
+                return [conversation, ...prevConversations];
+            }
+            return prevConversations;
+        });
+    };
 
     if (loading) {
         return (
@@ -53,15 +121,15 @@ export default function HomeScreen({ route, navigation }) {
 
     return (
         <View style={styles.container}>
-            <FlatList
+            <SwipeListView
                 data={conversations}
                 keyExtractor={(item) => item.conversation_id.toString()}
                 renderItem={({ item }) => (
                     <TouchableOpacity
                         onPress={() =>
                             navigation.navigate('Chat', {
-                                messages: item.messages, // Passer les messages
-                                title: item.title, // Passer le titre de la conversation
+                                messages: item.messages,
+                                title: item.title,
                                 phoneNumber,
                             })
                         }
@@ -75,6 +143,25 @@ export default function HomeScreen({ route, navigation }) {
                         </View>
                     </TouchableOpacity>
                 )}
+                renderHiddenItem={({ item }) => (
+                    <View style={styles.rowBack}>
+                        <TouchableOpacity
+                            style={styles.deleteButton}
+                            onPress={() => deleteConversation(item.conversation_id)}
+                        >
+                            <Text style={[
+                                styles.deleteButtonText,
+                                { display: openedRows[item.conversation_id] ? 'flex' : 'none' } // Affiche le texte uniquement si la ligne est glissée
+                            ]}>
+                                Supprimer
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+                leftOpenValue={0}
+                rightOpenValue={-75}
+                onRowOpen={handleRowOpen}
+                onRowClose={handleRowClose}
             />
         </View>
     );
@@ -109,5 +196,22 @@ const styles = StyleSheet.create({
     lastMessage: {
         color: 'gray',
         marginTop: 4,
+    },
+    rowBack: {
+        alignItems: 'center',
+        flex: 1,
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        paddingRight: 15,
+    },
+    deleteButton: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 75,
+        height: '100%',
+    },
+    deleteButtonText: {
+        color: 'black',
+        fontWeight: 'bold',
     },
 });
