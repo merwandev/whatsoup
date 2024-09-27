@@ -65,7 +65,7 @@ export default function HomeScreen({ route, navigation }) {
 
         if (phoneNumber) {
             fetchConversations();
-            const interval = setInterval(fetchConversations, 5000);
+            const interval = setInterval(fetchConversations, 50);
 
             return () => clearInterval(interval);
         } else {
@@ -133,6 +133,7 @@ export default function HomeScreen({ route, navigation }) {
                                 title: item.title,
                                 phoneNumber,
                                 conversations_id: item.conversation_id,
+                                conversation_image: item.conversation_image,
                             })
                         }
                     >

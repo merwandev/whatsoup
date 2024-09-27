@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, StyleSheet, KeyboardAvoidingView, Platform, Text } from 'react-native';
+import { View, FlatList, StyleSheet, KeyboardAvoidingView, Platform, Text, Image, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ChatInput from '../components/ChatInput';
 import Message from '../components/Message';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'; // Pour l'icône d'édition
 
 const BACKEND_IP = '10.74.1.114';
 const BACKEND_PORT = '3001';
@@ -13,8 +15,10 @@ const api = axios.create({
 });
 
 export default function ChatScreen({ route }) {
-  const { messages: initialMessages, title, phoneNumber, conversations_id } = route.params;
+  const { messages: initialMessages, title, phoneNumber, conversations_id, conversation_image } = route.params;
   const [messages, setMessages] = useState(initialMessages);
+  const navigation = useNavigation();
+
 
   const fetchUserId = async (phone) => {
     try {
@@ -28,7 +32,6 @@ export default function ChatScreen({ route }) {
       });
 
       const userId = response.data.user.id;
-      console.log(`ID de l'utilisateur pour le numéro ${fullPhone}:`, userId);
       return userId;
     } catch (error) {
       console.error(`Erreur lors de la récupération des informations utilisateur pour ${fullPhone}:`, error);
@@ -36,28 +39,25 @@ export default function ChatScreen({ route }) {
     }
   };
 
-
   const sendMessage = async (content) => {
     try {
       const jwt = await AsyncStorage.getItem('jwtToken');
+      const user_id = await fetchUserId(phoneNumber); 
 
-      const user_id = await fetchUserId(phoneNumber);
 
       if (!user_id) {
         console.error('Impossible de récupérer l\'userId pour le numéro de téléphone.');
         return;
       }
-      console.log('conversation_id:', conversations_id);
+
       const requestBody = {
         conversation_id: conversations_id,
         user_id,
         content,
-        image_url: null,
+        conversation_image: null,
         video_url: null,
         audio_url: null,
       };
-
-      console.log('Corps de la requête envoyée pour le message:', requestBody);
 
       const response = await api.post('/messages', requestBody, {
         headers: {
@@ -108,7 +108,18 @@ export default function ChatScreen({ route }) {
       keyboardVerticalOffset={90}
     >
       <View style={styles.chatHeader}>
+        <Image 
+          source={conversation_image ? { uri: conversation_image } : require('../assets/default-profile.jpg')} 
+          style={styles.chatImage} 
+        />
         <Text style={styles.chatTitle}>{title}</Text>
+        <TouchableOpacity
+          style={styles.editButton}
+          onPress={() => navigation.navigate('EditConversation', { conversations_id, title, phoneNumber, conversation_image, phoneNumber })}
+        >
+          <Icon name="pencil" size={24} color="#fff" />
+        </TouchableOpacity>
+
       </View>
 
       <FlatList
@@ -137,13 +148,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#ECE5DD',
   },
   chatHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 15,
     backgroundColor: '#075E54',
-    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  chatImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 10,
   },
   chatTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#fff',
+    flex: 1, // Pour que le titre prenne l'espace disponible
+  },
+  editButton: {
+    padding: 10,
   },
 });

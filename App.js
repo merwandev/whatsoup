@@ -8,6 +8,7 @@ import ChatScreen from './screens/ChatScreen';
 import NewChatScreen from './screens/NewChatScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import VerificationScreen from './screens/VerificationScreen';
+import EditConversationScreen from './screens/EditConversationScreen';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Constants from 'expo-constants';
 
@@ -108,6 +109,12 @@ export default function App() {
           component={ChatScreen}
           options={{ title: 'Chat' }}
         />
+        <Stack.Screen 
+          name="EditConversation" 
+          component={EditConversationScreen} 
+          options={{ title: 'Modifier la conversation' }} 
+        />
+
       </Stack.Navigator>
     </NavigationContainer>
   );
